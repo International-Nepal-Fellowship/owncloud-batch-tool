@@ -1,0 +1,4 @@
+"userName";"groups";"quota"
+"user1";"grp1,grp2,grp3";158989
+"user2";"group2";10000
+"user3";"group1, group2";300000
