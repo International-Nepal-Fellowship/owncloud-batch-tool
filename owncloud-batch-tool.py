@@ -36,9 +36,9 @@ oc = owncloud.Client(read_config_parameter ('URL',True))
 
 oc.login(read_config_parameter ('adminUser',True), read_config_parameter ('adminPassword',True))
 
-users = oc.search_users("")
 
 if read_config_parameter("groupsByDomainName",True,"boolean") is True:
+    users = oc.search_users("")
     print "groups by domain name"
     for user in users:
         # print user.text
