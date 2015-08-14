@@ -17,7 +17,7 @@ def read_config_parameter (name,mandatory=False,type="text"):
 import ConfigParser
 import argparse
 import owncloud
-
+import csv
 
 parser = argparse.ArgumentParser(description='OwnCloud Batch Tool')
 parser.add_argument('--config', dest='configFile', default="config.cfg",  
@@ -36,6 +36,10 @@ oc = owncloud.Client(read_config_parameter ('URL',True))
 
 oc.login(read_config_parameter ('adminUser',True), read_config_parameter ('adminPassword',True))
 
+with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFile:
+    userDefinition = csv.DictReader(userDefinitionFile,delimiter=';', quotechar='"')
+    for user in userDefinition:
+        print(user)
 
 if read_config_parameter("groupsByDomainName",True,"boolean") is True:
     users = oc.search_users("")
