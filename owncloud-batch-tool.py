@@ -42,9 +42,11 @@ with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFil
         #ToDo: should we delete first the user from all groups?
         groups=user['groups'].split(",")
         for group in groups:
-            #ToDo check if group exists But return of add_user_to_group is always True, also if the group does not exist. What should we do in case of an error? Send Email?
+            #ToDo check if group exists. But return of add_user_to_group is always True, also if the group does not exist. What should we do in case of an error? Send Email?
             oc.add_user_to_group(user['userName'].strip(),group.strip())
             print "user:"+user['userName'].strip()+"-"+group.strip()
+            
+        oc.set_user_attribute(user['userName'].strip(),"quota",int(user['quota']))
 
 if read_config_parameter("groupsByDomainName",True,"boolean") is True:
     users = oc.search_users("")
