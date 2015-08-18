@@ -39,8 +39,13 @@ oc.login(read_config_parameter ('adminUser',True), read_config_parameter ('admin
 with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFile:
     userDefinition = csv.DictReader(userDefinitionFile,delimiter=';', quotechar='"')
     for user in userDefinition:
-        #ToDo: should we delete first the user from all groups?
+        currentUserGroups=oc.get_user_groups(user['userName'])
         groups=user['groups'].split(",")
+
+        for currentUserGroup in currentUserGroups:
+            if currentUserGroup not in groups:
+                oc.remove_user_from_group(user['userName'],currentUserGroup)
+                
         for group in groups:
             #ToDo check if group exists. But return of add_user_to_group is always True, also if the group does not exist. What should we do in case of an error? Send Email?
             oc.add_user_to_group(user['userName'].strip(),group.strip())
