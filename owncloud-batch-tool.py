@@ -19,6 +19,20 @@ import argparse
 import owncloud
 import csv
 
+class message:
+    level = ''
+    message = ''
+    def __init__(self,message,level='message'):
+        if level not in ['message','error']:
+            self.level='messsage'
+        else:
+            self.level=level
+            
+        self.message=message
+            
+
+outputMessages = []
+
 parser = argparse.ArgumentParser(description='OwnCloud Batch Tool')
 parser.add_argument('--config', dest='configFile', default="config.cfg",  
                    help='path of the configuration file')
@@ -46,13 +60,15 @@ with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFil
         for currentUserGroup in currentUserGroups:
             if currentUserGroup not in groups:
                 oc.remove_user_from_group(user['userName'],currentUserGroup)
+                outputMessages.append(message('removed user from group','mesage'))
+                
                 
         for group in groups:
             #ToDo check if group exists. But return of add_user_to_group is always True, also if the group does not exist. What should we do in case of an error? Send Email?
             oc.add_user_to_group(user['userName'].strip(),group.strip())
-            print "user:"+user['userName'].strip()+"-"+group.strip()
+            outputMessages.append(message("added user " + user['userName'].strip() + " to group " +  group.strip() ,'message'))
             
-        oc.set_user_attribute(user['userName'].strip(),"quota",int(user['quota']))
+        oc.set_user_attribute(user['userName'].strip(),"quota",int(user['quota']))        
 
 if read_config_parameter("groupsByDomainName",True,"boolean") is True:
     users = oc.search_users("")
@@ -67,3 +83,6 @@ if read_config_parameter("groupsByDomainName",True,"boolean") is True:
                 print "user:"+user.text+"-"+group
                 oc.add_user_to_group(user.text,group)
 
+
+for message in outputMessages:
+    print message.level + " " + message.message
