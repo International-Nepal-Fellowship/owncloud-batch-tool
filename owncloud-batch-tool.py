@@ -53,22 +53,24 @@ oc.login(read_config_parameter ('adminUser',True), read_config_parameter ('admin
 with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFile:
     userDefinition = csv.DictReader(userDefinitionFile,delimiter=';', quotechar='"')
     for user in userDefinition:
-        currentUserGroups=oc.get_user_groups(user['userName'])
+        userName=user['userName'].strip()
+        currentUserGroups=oc.get_user_groups(userName)
         groups=user['groups'].split(",")
 
         #delete user from groups he should not be part of
         for currentUserGroup in currentUserGroups:
             if currentUserGroup not in groups:
-                oc.remove_user_from_group(user['userName'],currentUserGroup)
+                oc.remove_user_from_group(userName,currentUserGroup)
                 outputMessages.append(message('removed user from group','mesage'))
                 
                 
         for group in groups:
             #ToDo check if group exists. But return of add_user_to_group is always True, also if the group does not exist. What should we do in case of an error? Send Email?
-            oc.add_user_to_group(user['userName'].strip(),group.strip())
-            outputMessages.append(message("added user " + user['userName'].strip() + " to group " +  group.strip() ,'message'))
+            group=group.strip()
+            oc.add_user_to_group(userName,group)
+            outputMessages.append(message("added user " + userName + " to group " +  group ,'message'))
             
-        oc.set_user_attribute(user['userName'].strip(),"quota",int(user['quota']))        
+        oc.set_user_attribute(userName,"quota",int(user['quota']))        
 
 if read_config_parameter("groupsByDomainName",True,"boolean") is True:
     users = oc.search_users("")
@@ -80,7 +82,7 @@ if read_config_parameter("groupsByDomainName",True,"boolean") is True:
             groups = email[1].split(".")
             lastGroupNum=len(groups)-read_config_parameter("groupsByDomainNameSkipDomains",True,"int")
             for group in groups[:lastGroupNum]:
-                print "user:"+user.text+"-"+group
+                outputMessages.append(message("added user " + user.text + " to group " +  group ,'message'))
                 oc.add_user_to_group(user.text,group)
 
 
