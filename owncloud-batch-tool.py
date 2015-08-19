@@ -42,6 +42,7 @@ with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFil
         currentUserGroups=oc.get_user_groups(user['userName'])
         groups=user['groups'].split(",")
 
+        #delete user from groups he should not be part of
         for currentUserGroup in currentUserGroups:
             if currentUserGroup not in groups:
                 oc.remove_user_from_group(user['userName'],currentUserGroup)
