@@ -14,6 +14,10 @@ def read_config_parameter (name,mandatory=False,type="text"):
         else:
             return;
 
+def emailMessages (outputMessages):
+    for message in outputMessages:
+        print message.level + " " + message.message
+
 import ConfigParser
 import argparse
 import owncloud
@@ -48,7 +52,11 @@ print read_config_parameter ('adminUser',True)
 read_config_parameter("URL")
 oc = owncloud.Client(read_config_parameter ('URL',True))
 
-oc.login(read_config_parameter ('adminUser',True), read_config_parameter ('adminPassword',True))
+try:
+    print oc.login(read_config_parameter ('adminUser',True), read_config_parameter ('adminPassword',True))
+except:
+    outputMessages.append(message("could not login " ,'error'))
+    emailMessages
 
 with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFile:
     userDefinition = csv.DictReader(userDefinitionFile,delimiter=';', quotechar='"')
@@ -63,11 +71,16 @@ with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFil
                 oc.remove_user_from_group(userName,currentUserGroup)
                 outputMessages.append(message('removed user from group','mesage'))
                 
-                
         for group in groups:
-            #ToDo check if group exists. But return of add_user_to_group is always True, also if the group does not exist. What should we do in case of an error? Send Email?
             group=group.strip()
-            oc.add_user_to_group(userName,group)
+            try:
+                oc.add_user_to_group(userName,group)
+            except owncloud.ResponseError, e:
+                if e.status_code == 102:
+                    pass
+                else:
+                    outputMessages.append(message("could not add user " + userName + " to group " +  group ,'error'))
+                    
             outputMessages.append(message("added user " + userName + " to group " +  group ,'message'))
             
         oc.set_user_attribute(userName,"quota",int(user['quota']))        
@@ -78,13 +91,14 @@ if read_config_parameter("groupsByDomainName",True,"boolean") is True:
     for user in users:
         # print user.text
         email=user.text.split("@")
+        
         if len(email) > 1:
+            oc.add_user_to_group(user.text,email[1])
+
             groups = email[1].split(".")
             lastGroupNum=len(groups)-read_config_parameter("groupsByDomainNameSkipDomains",True,"int")
             for group in groups[:lastGroupNum]:
                 outputMessages.append(message("added user " + user.text + " to group " +  group ,'message'))
                 oc.add_user_to_group(user.text,group)
 
-
-for message in outputMessages:
-    print message.level + " " + message.message
+emailMessages(outputMessages)
