@@ -93,12 +93,23 @@ if read_config_parameter("groupsByDomainName",True,"boolean") is True:
         email=user.text.split("@")
         
         if len(email) > 1:
-            oc.add_user_to_group(user.text,email[1])
-
+#            oc.add_user_to_group(user.text,email[1])
+            outputMessages.append(message("added user " + user.text + " to group " +  email[1] ,'message'))
+            domainName=email[1]
             groups = email[1].split(".")
-            lastGroupNum=len(groups)-read_config_parameter("groupsByDomainNameSkipDomains",True,"int")
-            for group in groups[:lastGroupNum]:
-                outputMessages.append(message("added user " + user.text + " to group " +  group ,'message'))
-                oc.add_user_to_group(user.text,group)
+            for domainCount in xrange (read_config_parameter("groupsByDomainNameSkipDomains",True,"int")):
+                domainName=domainName.rpartition(".")[0]
+
+            print domainName
+
+            while len(domainName)>0:
+                oc.add_user_to_group(user.text,domainName)
+                outputMessages.append(message("added user " + user.text + " to group " +  domainName ,'message'))
+                domainName=domainName.partition(".")[2]
+                
+#            lastGroupNum=len(groups)-read_config_parameter("groupsByDomainNameSkipDomains",True,"int")
+#            for group in groups[:lastGroupNum]:
+#                outputMessages.append(message("added user " + user.text + " to group " +  group ,'message'))
+#                oc.add_user_to_group(user.text,group)
 
 emailMessages(outputMessages)
