@@ -75,15 +75,19 @@ with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFil
             group=group.strip()
             try:
                 oc.add_user_to_group(userName,group)
+                outputMessages.append(message("added user " + userName + " to group " +  group ,'message'))
             except owncloud.ResponseError, e:
                 if e.status_code == 102:
+                    outputMessages.append(message("user " + userName + " already in group " +  group ,'message'))                    
                     pass
                 else:
-                    outputMessages.append(message("could not add user " + userName + " to group " +  group ,'error'))
-                    
-            outputMessages.append(message("added user " + userName + " to group " +  group ,'message'))
-            
-        oc.set_user_attribute(userName,"quota",int(user['quota']))        
+                    outputMessages.append(message("could not add user " + userName + " to group " +  group + " " + e.res.text ,'error'))
+                                
+        try:
+            print(oc.set_user_attribute(userName,"quota",int(user['quota'])))
+            outputMessages.append(message("set quota for " + userName + " to " + user['quota']  ,'message'))
+        except owncloud.ResponseError, e:
+            outputMessages.append(message("could not set quota for user " + userName + " " + e.res.text ,'error'))
 
 if read_config_parameter("groupsByDomainName",True,"boolean") is True:
     users = oc.search_users("")
@@ -93,16 +97,32 @@ if read_config_parameter("groupsByDomainName",True,"boolean") is True:
         email=user.text.split("@")
         
         if len(email) > 1:
-            oc.add_user_to_group(user.text,email[1])
-            outputMessages.append(message("added user " + user.text + " to group " +  email[1] ,'message'))
+            try:
+                oc.add_user_to_group(user.text,email[1])
+                outputMessages.append(message("added user " + user.text + " to group " +  email[1] ,'message'))
+            except owncloud.ResponseError, e:
+                if e.status_code == 102:
+                    outputMessages.append(message("user " + user.text + " already in group " +  email[1] ,'message'))
+                    pass
+                else:
+                    outputMessages.append(message("could not add user " + user.text + " to group " + email[1] + " " + e.res.text ,'error'))
+  
             domainName=email[1]
             groups = email[1].split(".")
             for domainCount in xrange (read_config_parameter("groupsByDomainNameSkipDomains",True,"int")):
                 domainName=domainName.rpartition(".")[0]
 
             while len(domainName)>0:
-                oc.add_user_to_group(user.text,domainName)
-                outputMessages.append(message("added user " + user.text + " to group " +  domainName ,'message'))
+                try:
+                    oc.add_user_to_group(user.text,domainName)
+                    outputMessages.append(message("added user " + user.text + " to group " +  domainName ,'message'))
+                except owncloud.ResponseError, e:
+                    if e.status_code == 102:
+                        outputMessages.append(message("user " + user.text + " already in group " +  domainName ,'message'))
+                        pass
+                    else:
+                        outputMessages.append(message("could not add user " + user.text + " to group " + domainName + " " + e.res.text ,'error'))
+                        
                 domainName=domainName.partition(".")[2]
                 
 #            lastGroupNum=len(groups)-read_config_parameter("groupsByDomainNameSkipDomains",True,"int")
