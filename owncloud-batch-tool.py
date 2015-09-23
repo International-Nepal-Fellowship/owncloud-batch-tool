@@ -18,6 +18,9 @@ def emailMessages (outputMessages):
     for message in outputMessages:
         print message.level + " " + message.message
 
+def generate_groups_by_domain_name(owncloudUser):
+    print "To implement"
+
 import ConfigParser
 import argparse
 import owncloud
@@ -42,13 +45,18 @@ parser.add_argument('--config', dest='configFile', default="config.cfg",
                    help='path of the configuration file')
 
 args = parser.parse_args()
-print args.configFile
 
 config = ConfigParser.ConfigParser()
 config.read(args.configFile)
 
-print read_config_parameter ('URL',True)
-print read_config_parameter ('adminUser',True)
+csvUsers = {}
+
+#read user definition file
+with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFile:
+    for user in csv.DictReader(userDefinitionFile,delimiter=';', quotechar='"'):
+        user['groups']=user['groups'].split(",")
+        csvUsers[user['userName']] = user
+
 read_config_parameter("URL")
 oc = owncloud.Client(read_config_parameter ('URL',True))
 
@@ -58,6 +66,46 @@ except:
     outputMessages.append(message("could not login " ,'error'))
     emailMessages
 
+owncloudUsers = oc.search_users("")
+
+#loop trough all users that were found in owncloud
+for owncloudUser in owncloudUsers:
+    owncloudUser=owncloudUser.text
+    if owncloudUser in csvUsers:
+        groupsToBeIn=[]
+        currentUserGroups=oc.get_user_groups(owncloudUser)
+        #groups that the user should be in (from CSV file)
+        groupsToBeIn=csvUsers[owncloudUser]['groups']
+
+        #generate all group names (by domain name) that the user should be in
+        if read_config_parameter("groupsByDomainName",True,"boolean") is True:
+           groupsToBeIn=groupsToBeIn+generate_groups_by_domain_name(owncloudUser)
+
+        #delete user from groups he should not be part of
+        for currentUserGroup in currentUserGroups:
+            if currentUserGroup not in groupsToBeIn:
+                oc.remove_user_from_group(userName,currentUserGroup)
+                outputMessages.append(message('removed user from group','mesage'))    
+
+        #add user to groups
+        for group in groupsToBeIn:
+            group=group.strip()
+            try:
+                oc.add_user_to_group(owncloudUser,group)
+                outputMessages.append(message("added user " + owncloudUser + " to group " +  group ,'message'))
+            except owncloud.ResponseError, e:
+                if e.status_code == 102:
+                    outputMessages.append(message("user " + owncloudUser+ " already in group " +  group ,'message'))                    
+                    pass
+                else:
+                    outputMessages.append(message("could not add user " + owncloudUser + " to group " +  group + " " + e.res.text ,'error'))
+
+        try:
+            outputMessages.append(message("set quota for " + owncloudUser + " to " + csvUsers[owncloudUser]['quota']  ,'message'))
+        except owncloud.ResponseError, e:
+            outputMessages.append(message("could not set quota for user " + owncloudUser + " " + e.res.text ,'error'))
+
+'''
 with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFile:
     userDefinition = csv.DictReader(userDefinitionFile,delimiter=';', quotechar='"')
     for user in userDefinition:
@@ -129,5 +177,6 @@ if read_config_parameter("groupsByDomainName",True,"boolean") is True:
 #            for group in groups[:lastGroupNum]:
 #                outputMessages.append(message("added user " + user.text + " to group " +  group ,'message'))
 #                oc.add_user_to_group(user.text,group)
+'''
 
 emailMessages(outputMessages)
