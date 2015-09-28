@@ -19,7 +19,27 @@ def emailMessages (outputMessages):
         print message.level + " " + message.message
 
 def generate_groups_by_domain_name(owncloudUser):
-    print "To implement"
+
+    groupsToBeIn=[]
+    # print user.text
+    email=owncloudUser.split("@")
+    print email
+    if len(email) > 1:
+        groupsToBeIn.append(email[1])
+
+        domainName=email[1]
+        groups = email[1].split(".")
+        for domainCount in xrange (read_config_parameter("groupsByDomainNameSkipDomains",True,"int")):
+            domainName=domainName.rpartition(".")[0]
+
+        while len(domainName)>0:
+            groupsToBeIn.append(domainName)
+            domainName=domainName.partition(".")[2]
+    return groupsToBeIn
+#            lastGroupNum=len(groups)-read_config_parameter("groupsByDomainNameSkipDomains",True,"int")
+#            for group in groups[:lastGroupNum]:
+#                outputMessages.append(message("added user " + user.text + " to group " +  group ,'message'))
+#                oc.add_user_to_group(user.text,group)
 
 import ConfigParser
 import argparse
@@ -90,6 +110,7 @@ for owncloudUser in owncloudUsers:
         #add user to groups
         for group in groupsToBeIn:
             group=group.strip()
+            print owncloudUser + " " + group
             try:
                 oc.add_user_to_group(owncloudUser,group)
                 outputMessages.append(message("added user " + owncloudUser + " to group " +  group ,'message'))
