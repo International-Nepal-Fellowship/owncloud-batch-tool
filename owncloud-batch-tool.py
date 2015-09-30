@@ -95,7 +95,10 @@ for owncloudUser in owncloudUsers:
         groupsToBeIn=[]
         currentUserGroups=oc.get_user_groups(owncloudUser)
         #groups that the user should be in (from CSV file)
-        groupsToBeIn=csvUsers[owncloudUser]['groups']
+        if len(csvUsers[owncloudUser]['groups']) > 0 and csvUsers[owncloudUser]['groups'][0]:
+            print "groups from CSV"
+            print len(csvUsers[owncloudUser]['groups'])
+            groupsToBeIn=csvUsers[owncloudUser]['groups']
 
         #generate all group names (by domain name) that the user should be in
         if read_config_parameter("groupsByDomainName",True,"boolean") is True:
