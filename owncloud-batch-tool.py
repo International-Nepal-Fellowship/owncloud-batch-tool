@@ -19,10 +19,8 @@ def emailMessages (outputMessages):
         print message.level + " " + message.message
 
 def generate_groups_by_domain_name(owncloudUser):
-
     groupsToBeIn=[]
     email=owncloudUser.split("@")
-    print email
     if len(email) > 1:
         groupsToBeIn.append(email[1])
 
@@ -76,7 +74,7 @@ read_config_parameter("URL")
 oc = owncloud.Client(read_config_parameter ('URL',True))
 
 try:
-    print oc.login(read_config_parameter ('adminUser',True), read_config_parameter ('adminPassword',True))
+    oc.login(read_config_parameter ('adminUser',True), read_config_parameter ('adminPassword',True))
 except:
     outputMessages.append(message("could not login " ,'error'))
     emailMessages
