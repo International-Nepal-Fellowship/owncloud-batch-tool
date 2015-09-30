@@ -16,7 +16,7 @@ def read_config_parameter (name,mandatory=False,type="text"):
 
 def emailMessages (outputMessages):
     for message in outputMessages:
-        print message.level + " " + message.message
+        print message.level + ": " + message.message
 
 def generate_groups_by_domain_name(owncloudUser):
     groupsToBeIn=[]
@@ -109,14 +109,15 @@ for owncloudUser in owncloudUsers:
                 outputMessages.append(message("added user " + owncloudUser + " to group " +  group ,'message'))
             except owncloud.ResponseError, e:
                 if e.status_code == 102:
-                    outputMessages.append(message("user " + owncloudUser+ " already in group " +  group ,'message'))                    
+                    outputMessages.append(message("could not add user '" + owncloudUser + "' to group '" +  group + "' group does not exist"  ,'error'))
                     pass
                 else:
-                    outputMessages.append(message("could not add user " + owncloudUser + " to group " +  group + " " + e.res.text ,'error'))
+                    outputMessages.append(message("could not add user '" + owncloudUser + "' to group '" +  group + "' " + e.status_code,'error'))
+                     
 
         try:
-            outputMessages.append(message("set quota for " + owncloudUser + " to " + csvUsers[owncloudUser]['quota']  ,'message'))
+            outputMessages.append(message("set quota for '" + owncloudUser + "' to '" + csvUsers[owncloudUser]['quota'] + "'", 'message'))
         except owncloud.ResponseError, e:
-            outputMessages.append(message("could not set quota for user " + owncloudUser + " " + e.res.text ,'error'))
+            outputMessages.append(message("could not set quota for user '" + owncloudUser + "' " + e.status_code ,'error'))
 
 emailMessages(outputMessages)
