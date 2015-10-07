@@ -15,8 +15,44 @@ def read_config_parameter (name,mandatory=False,type="text"):
             return;
 
 def emailMessages (outputMessages):
+
+    emailBody=''
     for message in outputMessages:
-        print message.level + ": " + message.message
+        emailBody = emailBody + message.level + ": " + message.message + "\n"
+
+    subject="owncloud batch tool"
+    emailFrom=read_config_parameter("emailFrom",True,"text")
+    emailTo=read_config_parameter("emailTo",True,"text")
+    sslType=read_config_parameter("SMTPSSL",True,"text")
+    
+    eMail = """\
+From: %s
+To: %s
+Subject: %s
+
+%s""" % (emailFrom,emailTo,subject, emailBody)
+    
+    try:
+        if sslType == "SSLTLS":
+            server = smtplib.SMTP_SSL(read_config_parameter("SMTPServer",True,"text"), read_config_parameter("SMTPPort",True,"int"))
+        else:
+            server = smtplib.SMTP(read_config_parameter("SMTPServer",True,"text"), read_config_parameter("SMTPPort",True,"int"))
+            
+        server.ehlo()
+        
+        if sslType == "STARTTLS":
+            server.starttls()
+            server.ehlo()
+            
+        server.login(read_config_parameter("SMTPUser",True,"text"),read_config_parameter("SMTPPassword",True,"text"))
+        server.sendmail(emailFrom, emailTo, eMail)
+        server.close()
+        print 'successfully sent the mail'
+    except:
+        print emailBody
+        print "failed to send mail"
+        print "---------------------------------------------------------------"
+        raise
 
 def generate_groups_by_domain_name(owncloudUser):
     groupsToBeIn=[]
@@ -38,6 +74,7 @@ import ConfigParser
 import argparse
 import owncloud
 import csv
+import smtplib
 
 class message:
     level = ''
