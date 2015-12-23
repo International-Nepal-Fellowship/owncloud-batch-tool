@@ -135,7 +135,7 @@ for owncloudUser in owncloudUsers:
         #delete user from groups he should not be part of
         for currentUserGroup in currentUserGroups:
             if currentUserGroup not in groupsToBeIn:
-                oc.remove_user_from_group(userName,currentUserGroup)
+                oc.remove_user_from_group(owncloudUser,currentUserGroup)
                 outputMessages.append(message('removed user from group','mesage'))    
 
         #add user to groups
