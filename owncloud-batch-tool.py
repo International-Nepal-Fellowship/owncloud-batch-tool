@@ -104,7 +104,7 @@ csvUsers = {}
 #read user definition file
 with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFile:
     for user in csv.DictReader(userDefinitionFile,delimiter=';', quotechar='"'):
-        user['groups']=user['groups'].split(",")
+        user['groups']=[group.strip() for group in user['groups'].split(',')]
         csvUsers[user['userName']] = user
 
 read_config_parameter("URL")
