@@ -121,37 +121,39 @@ owncloudUsers = oc.search_users("")
 #loop trough all users that were found in owncloud
 for owncloudUser in owncloudUsers:
     owncloudUser=owncloudUser.text
+    groupsToBeIn=[]
+    currentUserGroups=oc.get_user_groups(owncloudUser)
+
     if owncloudUser in csvUsers:
-        groupsToBeIn=[]
-        currentUserGroups=oc.get_user_groups(owncloudUser)
         #groups that the user should be in (from CSV file)
         if len(csvUsers[owncloudUser]['groups']) > 0 and csvUsers[owncloudUser]['groups'][0]:
             groupsToBeIn=csvUsers[owncloudUser]['groups']
 
-        #generate all group names (by domain name) that the user should be in
-        if read_config_parameter("groupsByDomainName",True,"boolean") is True:
-           groupsToBeIn=groupsToBeIn+generate_groups_by_domain_name(owncloudUser)
+    #generate all group names (by domain name) that the user should be in
+    if read_config_parameter("groupsByDomainName",True,"boolean") is True:
+       groupsToBeIn=groupsToBeIn+generate_groups_by_domain_name(owncloudUser)
 
-        #delete user from groups he should not be part of
-        for currentUserGroup in currentUserGroups:
-            if currentUserGroup not in groupsToBeIn:
-                oc.remove_user_from_group(owncloudUser,currentUserGroup)
-                outputMessages.append(message('removed user from group ' + currentUserGroup ,'mesage'))    
+    #delete user from groups he should not be part of
+    for currentUserGroup in currentUserGroups:
+        if currentUserGroup not in groupsToBeIn:
+            oc.remove_user_from_group(owncloudUser,currentUserGroup)
+            outputMessages.append(message('removed user from group ' + currentUserGroup ,'mesage'))    
 
-        #add user to groups
-        for group in groupsToBeIn:
-            group=group.strip()
-            try:
-                oc.add_user_to_group(owncloudUser,group)
-                outputMessages.append(message("added user " + owncloudUser + " to group " +  group ,'message'))
-            except owncloud.ResponseError, e:
-                if e.status_code == 102:
-                    outputMessages.append(message("could not add user '" + owncloudUser + "' to group '" +  group + "' group does not exist"  ,'error'))
-                    pass
-                else:
-                    outputMessages.append(message("could not add user '" + owncloudUser + "' to group '" +  group + "' " + e.status_code,'error'))
+    #add user to groups
+    for group in groupsToBeIn:
+        group=group.strip()
+        try:
+            oc.add_user_to_group(owncloudUser,group)
+            outputMessages.append(message("added user " + owncloudUser + " to group " +  group ,'message'))
+        except owncloud.ResponseError, e:
+            if e.status_code == 102:
+                outputMessages.append(message("could not add user '" + owncloudUser + "' to group '" +  group + "' group does not exist"  ,'error'))
+                pass
+            else:
+                outputMessages.append(message("could not add user '" + owncloudUser + "' to group '" +  group + "' " + e.status_code,'error'))
                      
 
+    if owncloudUser in csvUsers:
         try:
             outputMessages.append(message("set quota for '" + owncloudUser + "' to '" + csvUsers[owncloudUser]['quota'] + "'", 'message'))
         except owncloud.ResponseError, e:
