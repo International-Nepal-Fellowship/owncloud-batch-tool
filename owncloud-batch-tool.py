@@ -109,9 +109,10 @@ with open(read_config_parameter("userDefinitionFile",True)) as userDefinitionFil
 
 read_config_parameter("URL")
 oc = owncloud.Client(read_config_parameter ('URL',True))
+adminUser=read_config_parameter ('adminUser',True)
 
 try:
-    oc.login(read_config_parameter ('adminUser',True), read_config_parameter ('adminPassword',True))
+    oc.login(adminUser, read_config_parameter ('adminPassword',True))
 except:
     outputMessages.append(message("could not login " ,'error'))
     emailMessages
@@ -124,6 +125,10 @@ for owncloudUser in owncloudUsers:
     groupsToBeIn=[]
     currentUserGroups=oc.get_user_groups(owncloudUser)
 
+    #we don't want to change anything for the admin user
+    if owncloudUser == adminUser:
+        continue
+    
     if owncloudUser in csvUsers:
         #groups that the user should be in (from CSV file)
         if len(csvUsers[owncloudUser]['groups']) > 0 and csvUsers[owncloudUser]['groups'][0]:
