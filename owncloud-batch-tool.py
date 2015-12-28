@@ -121,7 +121,7 @@ owncloudUsers = oc.search_users("")
 
 #loop trough all users that were found in owncloud
 for owncloudUser in owncloudUsers:
-    owncloudUser=owncloudUser.text
+
     groupsToBeIn=[]
     currentUserGroups=oc.get_user_groups(owncloudUser)
 
@@ -143,7 +143,7 @@ for owncloudUser in owncloudUsers:
         if currentUserGroup not in groupsToBeIn:
             try:
                 oc.remove_user_from_group(owncloudUser,currentUserGroup)
-                outputMessages.append(message('removed user from group ' + currentUserGroup ,'mesage'))
+                outputMessages.append(message("removed user '" + owncloudUser + "' from group '" + currentUserGroup + "'" ,'mesage'))
             except owncloud.ResponseError, e:
                 outputMessages.append(message("could not remove user '" + owncloudUser + "' from group '" + currentUserGroup  + "' " + e.status_code,'error'))
 
