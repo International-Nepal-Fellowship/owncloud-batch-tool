@@ -145,7 +145,7 @@ for owncloudUser in owncloudUsers:
                 oc.remove_user_from_group(owncloudUser,currentUserGroup)
                 outputMessages.append(message("removed user '" + owncloudUser + "' from group '" + currentUserGroup + "'" ,'mesage'))
             except owncloud.ResponseError, e:
-                outputMessages.append(message("could not remove user '" + owncloudUser + "' from group '" + currentUserGroup  + "' " + e.status_code,'error'))
+                outputMessages.append(message("could not remove user '" + owncloudUser + "' from group '" + currentUserGroup  + "' status-code: " + str(e.status_code),'error'))
 
     #add user to groups
     for group in groupsToBeIn:
@@ -158,7 +158,7 @@ for owncloudUser in owncloudUsers:
                 outputMessages.append(message("could not add user '" + owncloudUser + "' to group '" +  group + "' group does not exist"  ,'error'))
                 pass
             else:
-                outputMessages.append(message("could not add user '" + owncloudUser + "' to group '" +  group + "' " + e.status_code,'error'))
+                outputMessages.append(message("could not add user '" + owncloudUser + "' to group '" +  group + "' status-code: " + str(e.status_code),'error'))
                      
 
     if owncloudUser in csvUsers:
@@ -174,6 +174,6 @@ for owncloudUser in owncloudUsers:
                     outputMessages.append(message("could not set quota for user '" + owncloudUser + "' wrong input data " ,'error'))
                     pass
                 else:
-                    outputMessages.append(message("could not set quota for user '" + owncloudUser + "' " ,'error'))
+                    outputMessages.append(message("could not set quota for user '" + owncloudUser + "' status-code: " + str(e.status_code) ,'error'))
 
 emailMessages(outputMessages)
