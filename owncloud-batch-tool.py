@@ -162,9 +162,18 @@ for owncloudUser in owncloudUsers:
                      
 
     if owncloudUser in csvUsers:
-        try:
-            outputMessages.append(message("set quota for '" + owncloudUser + "' to '" + csvUsers[owncloudUser]['quota'] + "'", 'message'))
-        except owncloud.ResponseError, e:
-            outputMessages.append(message("could not set quota for user '" + owncloudUser + "' " + e.status_code ,'error'))
+        if csvUsers[owncloudUser]['quota']:
+            try:
+                oc.set_user_attribute(owncloudUser,"quota",csvUsers[owncloudUser]['quota'])
+                outputMessages.append(message("set quota for '" + owncloudUser + "' to '" + csvUsers[owncloudUser]['quota'] + "'", 'message'))
+            except owncloud.ResponseError, e:
+                if e.status_code == 101:
+                    outputMessages.append(message("could not set quota for user '" + owncloudUser + "' user does not exists "  ,'error'))
+                    pass
+                elif e.status_code == 102:
+                    outputMessages.append(message("could not set quota for user '" + owncloudUser + "' wrong input data " ,'error'))
+                    pass
+                else:
+                    outputMessages.append(message("could not set quota for user '" + owncloudUser + "' " ,'error'))
 
 emailMessages(outputMessages)
